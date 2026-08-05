@@ -1,0 +1,12 @@
+# Qt 构建产物
+build/
+cmake-build-*/
+
+# Qt Creator 本地配置
+.qtcreator/
+*.user
+*.user.*
+
+# 系统文件
+.DS_Store
+Thumbs.db
