@@ -72,6 +72,76 @@ HEX 数据可以使用空格分隔，例如：
 48 65 6C 6C 6F
 ```
 
+## 使用虚拟串口测试（macOS）
+
+没有物理串口设备时，可以使用 `socat` 创建一对互相连接的虚拟串口：程序连接其中一个端口，终端连接另一个端口，从而测试串口数据的双向收发。
+
+### 1. 安装 socat
+
+使用 Homebrew 安装：
+
+```bash
+brew install socat
+```
+
+### 2. 创建虚拟串口对
+
+打开一个终端并执行：
+
+```bash
+socat -d -d \
+  pty,rawer,echo=0,link=/tmp/serial-qt \
+  pty,rawer,echo=0,link=/tmp/serial-test
+```
+
+保持该终端和 `socat` 进程运行。命令会创建两个互相连接的串口路径：
+
+```text
+/tmp/serial-qt   <->   /tmp/serial-test
+```
+
+本机测试时得到的实际映射结果为：
+
+```text
+/tmp/serial-qt   -> /dev/ttys001
+/tmp/serial-test -> /dev/ttys003
+```
+
+系统每次分配的 `/dev/ttysXXX` 编号可能不同，因此程序中建议使用固定的 `/tmp/serial-qt` 和 `/tmp/serial-test` 路径。
+
+### 3. 串口助手连接虚拟串口
+
+macOS 下，`QSerialPortInfo::availablePorts()` 通常不会自动列出 `socat` 创建的 PTY，因此本项目将串口号下拉框设置成了可编辑模式。
+
+启动串口助手后，在“串口号”输入框中手动输入：
+
+```text
+/tmp/serial-qt
+```
+
+选择波特率 `9600`，然后点击“串口连接”。如果程序刚启动时输入内容被串口列表的首次刷新清除，请等待约 1 秒后重新输入。
+
+### 4. 从终端收发测试数据
+
+打开另一个终端，使用 macOS 自带的 `screen` 连接测试端：
+
+```bash
+screen /tmp/serial-test 9600
+```
+
+在 `screen` 中输入文字，串口助手的接收区将显示对应数据；在串口助手中发送数据，也会显示在 `screen` 中，从而验证双向通信。
+
+退出 `screen` 时，依次按下 `Ctrl+A` 和 `Ctrl+\`，然后确认退出。
+
+也可以不进入 `screen`，直接从命令行发送文本或 HEX 数据：
+
+```bash
+printf 'hello\r\n' > /tmp/serial-test
+printf '\xAA\x01\x02\x55' > /tmp/serial-test
+```
+
+测试完成后，在串口助手中断开连接，并在运行 `socat` 的终端按 `Ctrl+C` 停止虚拟串口。
+
 ## 项目结构
 
 ```text

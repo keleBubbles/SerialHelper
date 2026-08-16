@@ -1,58 +1,63 @@
 #include "serialhelper.h"
+#include <QTextCursor>
 
-
-void SerialHelper::ReceiveAeraInit(void){
+void SerialHelper::ReceiveAeraInit(void)
+{
     receiveAera = new QPlainTextEdit(this);
-    receiveAera->setFixedSize(800,400);
-    receiveAera->move(30,20);
+    receiveAera->setFixedSize(800, 400);
+    receiveAera->move(30, 20);
     receiveAera->setReadOnly(true);
 
     QPushButton *clearReceive = new QPushButton(this);
     clearReceive->setText(tr("清空接收区"));
-    clearReceive->setFixedSize(150,50);
-    clearReceive->move(680,430);
-    connect(clearReceive,&QPushButton::clicked,receiveAera,&QPlainTextEdit::clear);
+    clearReceive->setFixedSize(150, 50);
+    clearReceive->move(680, 430);
+    connect(clearReceive, &QPushButton::clicked, receiveAera, &QPlainTextEdit::clear);
 }
-void SerialHelper:: SendAreaInit(void){
+void SerialHelper::SendAreaInit(void)
+{
     sendAera = new QPlainTextEdit(this);
-    sendAera->setFixedSize(800,100);
-    sendAera->move(30,500);
-    //发送按钮
-    sendButton = new QPushButton(tr("发送"),this);
-    sendButton->setFixedSize(150,50);
-    sendButton->move(500,610);
+    sendAera->setFixedSize(800, 100);
+    sendAera->move(30, 500);
+    // 发送按钮
+    sendButton = new QPushButton(tr("发送"), this);
+    sendButton->setFixedSize(150, 50);
+    sendButton->move(500, 610);
     sendButton->setDisabled(true);
-    connect(sendButton,&QPushButton::clicked,this,[this](){
-        //发送数据
-        QString data = sendAera->toPlainText();//从接收区拿数据
-        qDebug() << data;
-        if(sendMode->currentText() == "HEX"){
-            QByteArray arr;
-            for(int i = 0;i<data.size();++i){
-                if(data[i] == ' ') continue;
-                int num = data.mid(i,2).toUInt(nullptr,16);
-                ++i;
-                arr.append(num);
-            }
-            serialPort->write(arr);
-        }else {
-            serialPort->write(data.toUtf8());
-        };
-
-    });
+    connect(sendButton, &QPushButton::clicked, this, [this]()
+            {
+                // 发送数据
+                QString data = sendAera->toPlainText(); // 从接收区拿数据
+                qDebug() << data;
+                if (sendMode->currentText() == "HEX")
+                {
+                    QByteArray arr;
+                    for (int i = 0; i < data.size(); ++i)
+                    {
+                        if (data[i] == ' ')
+                            continue;
+                        int num = data.mid(i, 2).toUInt(nullptr, 16);
+                        ++i;
+                        arr.append(num);
+                    }
+                    serialPort->write(arr);
+                }
+                else
+                {
+                    serialPort->write(data.toUtf8());
+                }; });
 
     QPushButton *clearSend = new QPushButton(this);
     clearSend->setText(tr("清空发送区"));
-    clearSend->setFixedSize(150,50);
-    clearSend->move(680,610);
-    connect(clearSend,&QPushButton::clicked,sendAera,&QPlainTextEdit::clear);
-
-
+    clearSend->setFixedSize(150, 50);
+    clearSend->move(680, 610);
+    connect(clearSend, &QPushButton::clicked, sendAera, &QPlainTextEdit::clear);
 }
 
-void SerialHelper::SetupInit(void){
+void SerialHelper::SetupInit(void)
+{
     this->portNumber = new QComboBox(this);
-
+    this->portNumber->setEditable(true); // 设置为可编辑
     this->baudRate = new QComboBox(this);
     this->dataSize = new QComboBox(this);
     this->stopSize = new QComboBox(this);
@@ -80,15 +85,15 @@ void SerialHelper::SetupInit(void){
     this->sendMode->addItem("HEX");
     this->sendMode->addItem("文本");
 
-    QLabel *portLabel = new QLabel(tr("串口号"),this);
-    QLabel *baudLabel = new QLabel(tr("波特率"),this);
-    QLabel *dataLabel = new QLabel(tr("数据位"),this);
-    QLabel *stopLabel = new QLabel(tr("停止位"),this);
-    QLabel *checkLabel = new QLabel(tr("校验位"),this);
-    QLabel *receiveLabel = new QLabel(tr("接收格式"),this);
-    QLabel *sendLabel = new QLabel(tr("发送格式"),this);
+    QLabel *portLabel = new QLabel(tr("串口号"), this);
+    QLabel *baudLabel = new QLabel(tr("波特率"), this);
+    QLabel *dataLabel = new QLabel(tr("数据位"), this);
+    QLabel *stopLabel = new QLabel(tr("停止位"), this);
+    QLabel *checkLabel = new QLabel(tr("校验位"), this);
+    QLabel *receiveLabel = new QLabel(tr("接收格式"), this);
+    QLabel *sendLabel = new QLabel(tr("发送格式"), this);
 
-    QVector<QComboBox*>setups;
+    QVector<QComboBox *> setups;
     setups.push_back(portNumber);
     setups.push_back(baudRate);
     setups.push_back(dataSize);
@@ -97,7 +102,7 @@ void SerialHelper::SetupInit(void){
     setups.push_back(receiveMode);
     setups.push_back(sendMode);
 
-    QVector<QLabel*> labels;
+    QVector<QLabel *> labels;
     labels.push_back(portLabel);
     labels.push_back(baudLabel);
     labels.push_back(dataLabel);
@@ -106,32 +111,34 @@ void SerialHelper::SetupInit(void){
     labels.push_back(receiveLabel);
     labels.push_back(sendLabel);
 
-    for(int i = 0; i <setups.size();++i){
-        setups[i]->setFixedSize(200,50);
-        setups[i]->move(850,20 + i * 80);
-        labels[i]->move(1080,25+i*80);
+    for (int i = 0; i < setups.size(); ++i)
+    {
+        setups[i]->setFixedSize(200, 50);
+        setups[i]->move(850, 20 + i * 80);
+        labels[i]->move(1080, 25 + i * 80);
     }
 }
 
 void SerialHelper::BeginUSART()
 {
-    startUSART = new QPushButton(tr("串口连接"),this);
-    endUSART = new QPushButton(tr("串口断开"),this);
-    startUSART->setFixedSize(150,50);
-    endUSART->setFixedSize(150,50);
-    startUSART->move(850,600);
-    endUSART->move(1000,600);
+    startUSART = new QPushButton(tr("串口连接"), this);
+    endUSART = new QPushButton(tr("串口断开"), this);
+    startUSART->setFixedSize(150, 50);
+    endUSART->setFixedSize(150, 50);
+    startUSART->move(850, 600);
+    endUSART->move(1000, 600);
 
     endUSART->setDisabled(true);
 
-    connect(endUSART,&QPushButton::clicked,this,[this](){
+    connect(endUSART, &QPushButton::clicked, this, [this]()
+            {
         sendButton->setDisabled(true);
         startUSART->setDisabled(false);
         endUSART->setDisabled(true);
         //断开连接
-        serialPort->close();
-    });
-    connect(startUSART,&QPushButton::clicked,this,[this](){
+        serialPort->close(); });
+    connect(startUSART, &QPushButton::clicked, this, [this]()
+            {
         //连接
         if(portNumber->currentText()!="") {
             startUSART->setDisabled(true);
@@ -140,11 +147,10 @@ void SerialHelper::BeginUSART()
             USART();
         }else {
             QMessageBox::critical(this,tr("串口打开失败"),tr("请确认串口是否连接正常"));
-        }
-    });
+        } });
 }
 
-void SerialHelper::USART(void)//连接
+void SerialHelper::USART(void) // 连接
 {
     QSerialPort::BaudRate Baud;
     QSerialPort::DataBits Data;
@@ -188,54 +194,68 @@ void SerialHelper::USART(void)//连接
     serialPort->setStopBits(Stop);
     serialPort->setPortName(port);
 
-    if(serialPort->open(QSerialPort::ReadWrite)){
-        //打开成功
-        connect(serialPort,&QSerialPort::readyRead,this,[this](){
+    if (serialPort->open(QSerialPort::ReadWrite))
+    {
+        // 打开成功
+        connect(serialPort, &QSerialPort::readyRead, this, [this]()
+                {
             auto data = serialPort->readAll();
             if(receiveMode->currentText() == "HEX"){
                 QString hex = data.toHex(' ');
-                this->receiveAera->appendPlainText(hex);
+                // appendPlainText() 每调用一次都会自动换行，因此不再使用：
+                // this->receiveAera->appendPlainText(hex);
+                // 将本次收到的 HEX 数据连续插入到接收区末尾。
+                receiveAera->moveCursor(QTextCursor::End);
+                receiveAera->insertPlainText(hex + " ");
+                receiveAera->ensureCursorVisible();
             }else{
-                QString str = QString(data);
-                receiveAera->appendPlainText(str);
-            }
-        });
-    }else{
-        QMessageBox::critical(this,tr("串口打开失败"),tr("请确认串口是否连接正常"));
+                QString str = QString::fromUtf8(data);
+                // appendPlainText() 每调用一次都会自动换行，因此不再使用：
+                // receiveAera->appendPlainText(str);
+                // 将文本连续插入到接收区末尾；只有数据中的换行符才会产生换行。
+                receiveAera->moveCursor(QTextCursor::End);
+                receiveAera->insertPlainText(str);
+                receiveAera->ensureCursorVisible();
+            } });
+    }
+    else
+    {
+        QMessageBox::critical(this, tr("串口打开失败"), tr("请确认串口是否连接正常"));
     }
 }
 
-//固定写法
-void SerialHelper::timerEvent(QTimerEvent* e){
-    if((e->timerId() != refreshTimerId))
+// 固定写法
+void SerialHelper::timerEvent(QTimerEvent *e)
+{
+    if ((e->timerId() != refreshTimerId))
         return;
 
     QVector<QString> temp;
-    for(const QSerialPortInfo& info : QSerialPortInfo::availablePorts()){
+    for (const QSerialPortInfo &info : QSerialPortInfo::availablePorts())
+    {
         temp.push_back(info.portName());
     }
-    std::sort(temp.begin(),temp.end());
-    if(temp != this->ports){
+    std::sort(temp.begin(), temp.end());
+    if (temp != this->ports)
+    {
         this->portNumber->clear();
         this->ports = temp;
-        for(auto & a :ports) portNumber->addItem(a);
+        for (auto &a : ports)
+            portNumber->addItem(a);
     }
 }
 
-SerialHelper::SerialHelper(QWidget *parent):
-    QMainWindow(parent)
+SerialHelper::SerialHelper(QWidget *parent) : QMainWindow(parent)
 {
-    this->setFixedSize(1200,750);
+    this->setFixedSize(1200, 750);
     this->setWindowTitle(tr("串口助手"));
-    ReceiveAeraInit();//调用接收区初始化函数
+    ReceiveAeraInit(); // 调用接收区初始化函数
     SendAreaInit();
     SetupInit();
     BeginUSART();
-    refreshTimerId = this->startTimer(1000);//定时器
-
-
+    refreshTimerId = this->startTimer(1000); // 定时器
 }
 
-SerialHelper::~SerialHelper(){
-
+SerialHelper::~SerialHelper()
+{
 }
